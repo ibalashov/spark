@@ -958,6 +958,7 @@ private[deploy] class Master(
       Some(ui)
     } catch {
       case fnf: FileNotFoundException =>
+        log.error("History Error", fnf)
         // Event logging is enabled for this application, but no event logs are found
         val title = s"Application history not found (${app.id})"
         var msg = s"No event logs found for application $appName in ${app.desc.eventLogDir.get}."

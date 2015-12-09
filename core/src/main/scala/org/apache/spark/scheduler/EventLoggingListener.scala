@@ -20,20 +20,19 @@ package org.apache.spark.scheduler
 import java.io._
 import java.net.URI
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-
 import com.google.common.base.Charsets
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, FSDataOutputStream, Path}
 import org.apache.hadoop.fs.permission.FsPermission
-import org.json4s.JsonAST.JValue
-import org.json4s.jackson.JsonMethods._
-
-import org.apache.spark.{Logging, SparkConf, SPARK_VERSION}
+import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, Path}
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.io.CompressionCodec
 import org.apache.spark.util.{JsonProtocol, Utils}
+import org.apache.spark.{Logging, SPARK_VERSION, SparkConf}
+import org.json4s.JsonAST.JValue
+import org.json4s.jackson.JsonMethods._
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A SparkListener that logs events to persistent storage.
@@ -296,7 +295,8 @@ private[spark] object EventLoggingListener extends Logging {
     // It's not clear whether FileSystem.open() throws FileNotFoundException or just plain
     // IOException when a file does not exist, so try our best to throw a proper exception.
     if (!fs.exists(log)) {
-      throw new FileNotFoundException(s"File $log does not exist.")
+      val pathList: List[Path] = fs.listStatus(log).map{ _.getPath }.toList
+      throw new FileNotFoundException(s"File $log does not exist in $fs. Parent: ${log.getParent}, Siblings: ${pathList}")
     }
 
     val in = new BufferedInputStream(fs.open(log))
